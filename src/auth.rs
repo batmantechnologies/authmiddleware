@@ -1,12 +1,12 @@
 use std::future::{ready, Ready};
-use log::info;
+use log::{info, debug};
 use std::rc::Rc;
 use std::cell::RefCell;
 
 use actix_web::body::EitherBody;
 use actix_web::dev::{self, ServiceRequest, ServiceResponse};
 use actix_web::dev::{Service, Transform};
-use actix_web::{http, Error, HttpResponse, HttpMessage};
+use actix_web::{Error, HttpMessage};
 use futures_util::future::LocalBoxFuture;
 
 pub use crate::utils::{AuthData, AuthInfo};
@@ -69,7 +69,8 @@ where
             let path = req.path().clone().to_string();
             let (request, paylaod) = req.into_parts();
 
-            if path == "/master-permission/permission/get/permission-codes/" {
+            // Skipping allowed URLS below URL where
+            if auth_data.is_url_allowed(&path) {
                 let req = ServiceRequest::from_parts(request, paylaod);
                 return srv.call(req).await.map(ServiceResponse::map_into_left_body);
             } else if cookie.is_none() {

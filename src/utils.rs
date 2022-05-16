@@ -5,8 +5,7 @@ use serde::{Serialize, Deserialize};
 use reqwest;
 
 use actix_web::{
-    dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    Error, HttpMessage, HttpResponse, cookie::Cookie
+    HttpResponse, cookie::Cookie
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -19,6 +18,7 @@ pub struct AuthInfo {
 pub struct AuthData {
     token_url: String,
     http_client: reqwest::Client,
+    allowed_urls: [String; 1],
 }
 
 impl AuthInfo {
@@ -29,11 +29,19 @@ impl AuthInfo {
 
 impl AuthData {
 
-    pub fn new() -> AuthData {
-
+    pub fn new(allowed_urls: [String; 1]) -> AuthData {
         AuthData {
             token_url: get_token_url(),
             http_client: reqwest::Client::new(),
+            allowed_urls: allowed_urls
+        }
+    }
+
+    pub fn is_url_allowed(&self, url: &String) -> bool {
+        if self.allowed_urls.contains(url) {
+            return true
+        } else {
+            return false
         }
     }
 
@@ -41,7 +49,7 @@ impl AuthData {
 
         let cookie = Cookie::build("bearer","").path("/").finish();
         let mut response = HttpResponse::Forbidden().json(message);
-        response.add_removal_cookie(&cookie);
+        response.add_removal_cookie(&cookie).unwrap();
         return response
     }
 

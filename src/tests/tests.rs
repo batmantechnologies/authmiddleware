@@ -1,28 +1,33 @@
 use log::{info};
 use std::env;
-use actix_web::{web, Error, HttpResponse, middleware,
-                App, test, http::header};
+use actix_web::{web, Error, HttpResponse, middleware, guard,
+                App, test, http::header, web::ReqData};
 use super::simulate_standalone_server;
 use httpmock::prelude::*;
-use crate::{AuthenticateMiddlewareFactory, AuthData};
+use crate::{AuthenticateMiddlewareFactory, AuthData, AuthInfo};
 use serde_json::json;
+use std::rc::Rc;
 
+const ALLOWED_URLS: [&str; 1] = ["/master-permission/permission/get/permission-codes/"];
 /// This function initiates logging
 fn initialise_logging() {
-    env::set_var("TEST_DATABASE_URL", "");
     env::set_var("TOKENSERVICE_URL", "http://localhost:5000");
     let _result = env_logger::try_init();
     dotenv::dotenv().ok();
 }
 
-pub async fn check_health() -> Result<HttpResponse, Error> {
+pub async fn check_health(auth_info: Option<ReqData<Rc<AuthInfo>>>) -> Result<HttpResponse, Error> {
+    let auth_info = auth_info.unwrap().get_data();
+    info!("UserID: {0}, AppID: {1}", auth_info.0, auth_info.1);
     Ok(HttpResponse::Ok().json("Service is reachable"))
 }
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(
-        web::scope("/storeservice")
-            .route("/health/", web::get().to(check_health))
+        web::resource("/storeservice/health/")
+            .name("health_check")
+            .guard(guard::Header("content-type", "application/json"))
+            .route(web::get().to(check_health))
     );
 }
 
@@ -56,11 +61,13 @@ async fn hit_store_service_middleware_test() {
 
 
     // Start HTTP server
-    let ALLOWED_URLS: [String; 1] = ["/master-permission/permission/get/permission-codes/".to_string()];
+    let allowed_urls = ALLOWED_URLS.into_iter().map(|val|{val.to_string()}).collect();
+    let allowed_urls: Rc<Vec<String>> = Rc::new(allowed_urls);
+
     let mut app = test::init_service(
         App::new()
             .wrap(middleware::Logger::default())
-            .wrap(AuthenticateMiddlewareFactory::new(AuthData::new(ALLOWED_URLS.clone())))
+            .wrap(AuthenticateMiddlewareFactory::new(AuthData::new(Rc::clone(&allowed_urls))))
             .configure(config)
     ).await;
 
@@ -96,11 +103,13 @@ async fn hit_store_service_without_auth_coockie_test() {
         }).await;
 
     // Start HTTP server
-    let ALLOWED_URLS: [String; 1] = ["/master-permission/permission/get/permission-codes/".to_string()];
+    let allowed_urls = ALLOWED_URLS.into_iter().map(|val|{val.to_string()}).collect();
+    let allowed_urls: Rc<Vec<String>> = Rc::new(allowed_urls);
+
     let mut app = test::init_service(
         App::new()
             .wrap(middleware::Logger::default())
-            .wrap(AuthenticateMiddlewareFactory::new(AuthData::new(ALLOWED_URLS.clone())))
+            .wrap(AuthenticateMiddlewareFactory::new(AuthData::new(Rc::clone(&allowed_urls))))
             .configure(config)
     ).await;
 

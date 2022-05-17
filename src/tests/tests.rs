@@ -32,7 +32,7 @@ fn get_login_coockie() -> String {
     coockie_string
 }
 
-
+/// Hit Store service through middleware
 #[actix_rt::test]
 async fn hit_store_service_middleware_test() {
 
@@ -71,4 +71,43 @@ async fn hit_store_service_middleware_test() {
         .send_request(&mut app)
         .await;
     assert_eq!(req.status(), 200);
+}
+
+/// Hit Store service through middleware and fail to reach it
+#[actix_rt::test]
+async fn hit_store_service_without_auth_coockie_test() {
+
+    initialise_logging();
+    // This starts up a standalone server in the background running on port 5000
+    simulate_standalone_server();
+
+    // Instead of creating a new MockServer using connect_from_env_async(), we connect by
+    // reading the host and port from the environment (HTTPMOCK_HOST / HTTPMOCK_PORT) or
+    // falling back to defaults (localhost on port 5000)
+    let server = MockServer::connect_from_env_async().await;
+
+    let _search_mock = server
+        .mock_async(|when, then| {
+            when.method(POST)
+                .path_contains("/token/verify-token/");
+            then.header("content-type", "application/json")
+                .json_body(json!({"app_id": 2_u32 , "user_id": 2_u32}))
+                .status(200);
+        }).await;
+
+    // Start HTTP server
+    let ALLOWED_URLS: [String; 1] = ["/master-permission/permission/get/permission-codes/".to_string()];
+    let mut app = test::init_service(
+        App::new()
+            .wrap(middleware::Logger::default())
+            .wrap(AuthenticateMiddlewareFactory::new(AuthData::new(ALLOWED_URLS.clone())))
+            .configure(config)
+    ).await;
+
+    let req = test::TestRequest::get()
+        .uri("/storeservice/health/")
+        .insert_header((header::CONTENT_TYPE, "application/json"))
+        .send_request(&mut app)
+        .await;
+    assert_eq!(req.status(), 403);
 }

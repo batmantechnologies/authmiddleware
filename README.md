@@ -4,8 +4,12 @@ An Middleware for authentication of users in Actix-web library.
 
 Example :1
 
-/// This export is where token sent for verification and authentication
+This export is where token sent for verification and authentication
+
+```
 export TOKENSERVICE_URL="http://token-service:5000";
+
+```
 
 ```
 

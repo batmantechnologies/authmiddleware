@@ -1,5 +1,5 @@
 use std::future::{ready, Ready};
-use log::{info, debug};
+use log::{debug};
 use std::rc::Rc;
 use std::cell::RefCell;
 
@@ -56,7 +56,6 @@ where
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
-
     dev::forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
@@ -67,6 +66,7 @@ where
         Box::pin(async move {
             let cookie = req.cookie("bearer");
             let path = req.path().clone().to_string();
+            debug!("Authenticaiton Initiated for {}", &path);
             let (request, paylaod) = req.into_parts();
 
             // Skipping allowed URLS below URL where
@@ -78,7 +78,6 @@ where
                 let res = res.map_into_right_body();
                 return Ok(ServiceResponse::new(request, res))
             }
-
             let cookie = cookie.unwrap();
             let auth_result = auth_data.authenticate(path, cookie.value().to_string()).await;
             if let Err(msg) = auth_result {

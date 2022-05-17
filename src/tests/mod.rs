@@ -6,6 +6,7 @@ use httpmock::standalone::start_standalone_server;
 use tokio::task::LocalSet;
 
 mod tests;
+mod utils;
 
 /// ====================================================================================
 /// The rest of this file is only required to simulate that a standalone mock server is

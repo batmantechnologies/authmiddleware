@@ -3,7 +3,7 @@ use serde_json::json;
 use crate::apicalls::get_token_url;
 use serde::{Serialize, Deserialize};
 use reqwest;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use actix_web::{
     HttpResponse, cookie::Cookie
@@ -19,7 +19,7 @@ pub struct AuthInfo {
 pub struct AuthData {
     token_url: String,
     http_client: reqwest::Client,
-    allowed_urls: Rc<Vec<String>>,
+    allowed_urls: Arc<Vec<String>>,
 }
 
 impl AuthInfo {
@@ -30,7 +30,7 @@ impl AuthInfo {
 
 impl AuthData {
 
-    pub fn new(allowed_urls: Rc<Vec<String>>) -> AuthData {
+    pub fn new(allowed_urls: Arc<Vec<String>>) -> AuthData {
         AuthData {
             token_url: get_token_url(),
             http_client: reqwest::Client::new(),

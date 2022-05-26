@@ -2,7 +2,7 @@ use log::{debug};
 use serde_json::json;
 use crate::apicalls::get_token_url;
 use serde::{Serialize, Deserialize};
-use reqwest;
+use reqwest::{self, Client};
 use std::sync::Arc;
 
 use actix_web::{
@@ -16,6 +16,11 @@ pub struct AuthInfo {
 }
 
 #[derive(Clone, Debug)]
+pub struct HttpClient {
+    client: Client,
+}
+
+#[derive(Clone, Debug)]
 pub struct AuthData {
     token_url: String,
     http_client: reqwest::Client,
@@ -26,6 +31,17 @@ impl AuthInfo {
     pub fn get_data(&self) -> (i32, i32) {
         (self.user_id.clone(), self.app_id.clone())
     }
+}
+
+impl HttpClient {
+    pub fn new(client: Client) -> HttpClient {
+        HttpClient { client: client }
+    }
+
+    pub fn get_client(&self) -> Client {
+        self.client.clone()
+    }
+
 }
 
 impl AuthData {

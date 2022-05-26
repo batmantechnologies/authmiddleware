@@ -6,4 +6,5 @@ mod tests;
 
 pub use auth::AuthData;
 pub use auth::AuthInfo;
+pub use auth::HttpClient;
 pub use auth::AuthenticateMiddlewareFactory;

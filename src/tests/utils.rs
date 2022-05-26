@@ -1,7 +1,8 @@
-use log::{info};
+use log::info;
+use log::debug;
 use std::env;
 use actix_web::{web, Error, HttpResponse, guard, web::ReqData};
-use crate::{AuthInfo};
+use crate::{AuthInfo, HttpClient};
 use std::rc::Rc;
 
 /// This function initiates logging
@@ -17,12 +18,31 @@ pub async fn check_health(auth_info: Option<ReqData<Rc<AuthInfo>>>) -> Result<Ht
     Ok(HttpResponse::Ok().json("Service is reachable"))
 }
 
+pub async fn check_http_client(http_client: Option<ReqData<Rc<HttpClient>>>) -> Result<HttpResponse, Error> {
+    let http_client = http_client.unwrap().get_client();
+    let client = http_client.clone();
+    client.get("http://72de-103-146-217-11.ngrok.io").send().await;
+    Ok(HttpResponse::Ok().json("Service is reachable"))
+}
+
 pub fn config(cfg: &mut web::ServiceConfig) {
+
     cfg.service(
-        web::resource("/storeservice/health/")
-            .name("health_check")
-            .guard(guard::Header("content-type", "application/json"))
-            .route(web::get().to(check_health))
+        web::scope("/storeservice")
+            .service(
+                web::scope("/test")
+                    .service(
+                        web::resource("/httpclient/")
+                            .name("health_httpclient")
+                            .guard(guard::Header("content-type", "application/json"))
+                            .route(web::get().to(check_http_client)),
+                    )
+            )
+            .service(
+                web::resource("/health/")
+                    .name("health_check")
+                    .route(web::get().to(check_health)),
+            )
     );
 }
 

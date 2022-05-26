@@ -9,7 +9,8 @@ use actix_web::dev::{Service, Transform};
 use actix_web::{Error, HttpMessage};
 use futures_util::future::LocalBoxFuture;
 
-pub use crate::utils::{AuthData, AuthInfo};
+use reqwest::{self, header};
+pub use crate::utils::{AuthData, AuthInfo, HttpClient};
 
 pub struct AuthenticateMiddlewareFactory {
     auth_data: Rc<AuthData>,
@@ -42,6 +43,7 @@ where
         }))
     }
 }
+
 pub struct CheckLoginMiddleware<S> {
     auth_data: Rc<AuthData>,
     service: Rc<RefCell<S>>,
@@ -72,6 +74,8 @@ where
             // Skipping allowed URLS below URL where
             if auth_data.is_url_allowed(&path) {
                 let req = ServiceRequest::from_parts(request, paylaod);
+                let http_client = HttpClient::new(reqwest::Client::new());
+                req.extensions_mut().insert::<Rc<HttpClient>>(Rc::new(http_client));
                 return srv.call(req).await.map(ServiceResponse::map_into_left_body);
             } else if cookie.is_none() {
                 let res = auth_data.clear_cookie("Bearer Token is Missing".into());
@@ -87,6 +91,15 @@ where
             } else {
                 let auth_info: AuthInfo = auth_result.unwrap();
                 let req = ServiceRequest::from_parts(request, paylaod);
+                let mut new_header = header::HeaderMap::new();
+                for (key, value) in req.headers() {
+                    new_header.insert(key, value.clone());
+                }
+                let client = reqwest::Client::builder()
+                    .default_headers(new_header)
+                    .build().unwrap();
+                let http_client = HttpClient::new(client);
+                req.extensions_mut().insert::<Rc<HttpClient>>(Rc::new(http_client));
                 req.extensions_mut().insert::<Rc<AuthInfo>>(Rc::new(auth_info));
                 return srv.call(req).await.map(ServiceResponse::map_into_left_body);
             }

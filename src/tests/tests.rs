@@ -2,7 +2,7 @@ use actix_web::{middleware, App, test, http::header};
 use log::debug;
 use super::simulate_standalone_server;
 use httpmock::prelude::*;
-use crate::{AuthenticateMiddlewareFactory, AuthData};
+use crate::{AuthenticateMiddlewareFactory, AuthData, HttpClient};
 use super::utils::{initialise_logging, config, get_login_coockie};
 use serde_json::json;
 use std::sync::Arc;

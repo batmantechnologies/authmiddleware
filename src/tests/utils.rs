@@ -18,7 +18,7 @@ pub async fn check_health(auth_info: Option<ReqData<Rc<AuthInfo>>>) -> Result<Ht
     Ok(HttpResponse::Ok().json("Service is reachable"))
 }
 
-pub async fn check_http_client(http_client: Option<ReqData<Rc<HttpClient>>>) -> Result<HttpResponse, Error> {
+pub async fn check_http_client(http_client: Option<ReqData<HttpClient>>) -> Result<HttpResponse, Error> {
     let http_client = http_client.unwrap().get_client();
     let client = http_client.clone();
     client.get("http://72de-103-146-217-11.ngrok.io").send().await;

@@ -73,8 +73,8 @@ where
             debug!("Authenticaiton Initiated for {}", &path);
             let (request, paylaod) = req.into_parts();
 
-            // Skipping allowed URLS below URL where
-            if auth_data.is_url_allowed(&path) {
+            // Skipping unprotected URLS below URL where
+            if auth_data.is_url_unprotected(&path) {
                 let req = ServiceRequest::from_parts(request, paylaod);
                 let http_client = HttpClient::new(reqwest::Client::new());
                 req.extensions_mut().insert::<HttpClient>(http_client);

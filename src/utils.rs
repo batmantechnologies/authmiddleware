@@ -24,7 +24,7 @@ pub struct HttpClient {
 pub struct AuthData {
     token_url: String,
     http_client: reqwest::Client,
-    allowed_urls: Arc<Vec<String>>,
+    unprotected_urls: Arc<Vec<String>>,
 }
 
 impl AuthInfo {
@@ -46,16 +46,16 @@ impl HttpClient {
 
 impl AuthData {
 
-    pub fn new(allowed_urls: Arc<Vec<String>>) -> AuthData {
+    pub fn new(unprotected_urls: Arc<Vec<String>>) -> AuthData {
         AuthData {
             token_url: get_token_url(),
             http_client: reqwest::Client::new(),
-            allowed_urls: allowed_urls
+            unprotected_urls: unprotected_urls
         }
     }
 
-    pub fn is_url_allowed(&self, url: &String) -> bool {
-        if self.allowed_urls.contains(url) {
+    pub fn is_url_unprotected(&self, url: &String) -> bool {
+        if self.unprotected_urls.contains(url) {
             return true
         } else {
             return false

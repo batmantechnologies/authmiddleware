@@ -87,7 +87,8 @@ where
             let cookie = cookie.unwrap();
             let auth_result = auth_data.authenticate(path, cookie.value().to_string()).await;
             if let Err(msg) = auth_result {
-                #let res = auth_data.clear_cookie(msg);
+                // Please remove comments from below line before release
+                // let res = auth_data.clear_cookie(msg);
                 let res = res.map_into_right_body();
                 return Ok(ServiceResponse::new(request, res))
             } else {

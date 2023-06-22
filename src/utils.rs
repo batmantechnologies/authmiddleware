@@ -1,4 +1,4 @@
-use log::{debug};
+use log;
 use serde_json::json;
 use crate::apicalls;
 use serde::{Serialize, Deserialize};
@@ -63,7 +63,7 @@ impl AuthData {
     }
 
     pub fn clear_cookie(&self, message: String) -> HttpResponse {
-        debug!("Cleared coockie. as it cannot be authenticated or authorised");
+        log::debug!("Cleared coockie. as it cannot be authenticated or authorised");
         let cookie = Cookie::build("bearer","").path("/").finish();
         let mut response = HttpResponse::Forbidden().json(message);
         response.add_removal_cookie(&cookie).unwrap();
@@ -72,7 +72,7 @@ impl AuthData {
 
     pub async fn authenticate(&self, path: String, cookie_string: String) -> Result<AuthInfo, String> {
 
-        debug!("Authenticaiton initiated for the path {}", path);
+        log::info!("Authenticaiton initiated for the path {}", path);
         let res = self.http_client.clone().post(self.token_url.clone()+"/token/verify-token/")
             .json(&json!({
                 "path": path,

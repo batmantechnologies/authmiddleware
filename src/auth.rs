@@ -1,5 +1,5 @@
 use std::future::{ready, Ready};
-use log::{debug};
+use log;
 use std::rc::Rc;
 use std::cell::RefCell;
 
@@ -70,7 +70,7 @@ where
         Box::pin(async move {
             let cookie = req.cookie("bearer");
             let path = req.path().clone().to_string();
-            debug!("Authenticaiton Initiated for {}", &path);
+            log::info!("Authenticaiton Initiated for {}", &path);
             let (request, paylaod) = req.into_parts();
 
             // Skipping unprotected URLS below URL where
@@ -80,13 +80,15 @@ where
                 req.extensions_mut().insert::<HttpClient>(http_client);
                 return srv.call(req).await.map(ServiceResponse::map_into_left_body);
             } else if cookie.is_none() {
+                log::debug!("Bearer Token is Missing");
                 let res = auth_data.clear_cookie("Bearer Token is Missing".into());
                 let res = res.map_into_right_body();
                 return Ok(ServiceResponse::new(request, res))
             }
             let cookie = cookie.unwrap();
-            let auth_result = auth_data.authenticate(path, cookie.value().to_string()).await;
+            let auth_result = auth_data.authenticate(path.clone(), cookie.value().to_string()).await;
             if let Err(msg) = auth_result {
+                log::debug!("Path URL Authentication Failed: {}", &path);
                 let res = auth_data.clear_cookie(msg);
                 let res = res.map_into_right_body();
                 return Ok(ServiceResponse::new(request, res))

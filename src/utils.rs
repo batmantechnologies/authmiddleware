@@ -70,9 +70,9 @@ impl AuthData {
         return response
     }
 
+    // Checks if the path has access to the requested url
     pub async fn authenticate(&self, path: String, cookie_string: String) -> Result<AuthInfo, String> {
 
-        log::info!("Authenticaiton initiated for the path {}", path);
         let res = self.http_client.clone().post(self.token_url.clone()+"/token/verify-token/")
             .json(&json!({
                 "path": path,

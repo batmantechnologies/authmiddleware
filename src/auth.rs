@@ -10,7 +10,7 @@ use actix_web::{Error, HttpMessage};
 use actix_web::http::header::{COOKIE};
 use futures_util::future::LocalBoxFuture;
 
-use reqwest::{self, header, Client};
+use reqwest::{self, header};
 
 pub use crate::utils::{AuthData, AuthInfo, HttpClient};
 

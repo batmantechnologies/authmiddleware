@@ -13,6 +13,7 @@ use actix_web::{
 pub struct AuthInfo {
     user_id: i32,
     app_id: i32,
+    path: String
 }
 
 #[derive(Clone, Debug)]
@@ -30,6 +31,10 @@ pub struct AuthData {
 impl AuthInfo {
     pub fn get_data(&self) -> (i32, i32) {
         (self.user_id.clone(), self.app_id.clone())
+    }
+
+    pub fn get_path(&self) -> String {
+        self.path.clone()
     }
 }
 

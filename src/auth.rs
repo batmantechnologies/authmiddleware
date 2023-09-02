@@ -87,7 +87,9 @@ where
             let cookie = cookie.unwrap();
             let auth_result = auth_data.authenticate(path.clone(), cookie.value().to_string()).await;
             if let Err(msg) = auth_result {
+                log::debug!("xxxxxxx   PATH ACCESS FAILURE FOR BELOW PATH  xxxxxx");
                 log::debug!("Path URL Authentication Failed: {}", &path);
+                log::debug!("xxxxxxx   PATH ACCESS FAILURE FOR ABOVE PATH  xxxxxx");
                 let res = auth_data.clear_cookie(msg);
                 let res = res.map_into_right_body();
                 return Ok(ServiceResponse::new(request, res))

@@ -53,7 +53,7 @@ impl AuthData {
 
     pub fn new(unprotected_urls: Arc<Vec<String>>) -> AuthData {
         AuthData {
-            token_url: apicalls::get_commonservices_url(),
+            token_url: apicalls::get_proxy_url(),
             http_client: reqwest::Client::new(),
             unprotected_urls: unprotected_urls
         }

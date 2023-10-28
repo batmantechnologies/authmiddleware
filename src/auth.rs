@@ -68,7 +68,7 @@ where
 
         Box::pin(async move {
             let cookie = req.cookie("bearer");
-            let path = req.path().clone().to_string();
+            let path = req.path().to_string();
             log::info!("Authenticaiton Initiated for {}", &path);
             let (request, paylaod) = req.into_parts();
 

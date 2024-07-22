@@ -80,6 +80,12 @@ impl AuthData {
         return response
     }
 
+    pub fn forbid_keep_cookie(&self, message: String) -> HttpResponse {
+        log::debug!("Forbiding but not clearing coockie");
+        let response = HttpResponse::Forbidden().json(message);
+        return response
+    }
+
     // Checks if the path has access to the requested url
     pub async fn authenticate(&self, path: String, cookie_string: String) -> Result<AuthInfo, String> {
 

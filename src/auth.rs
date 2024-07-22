@@ -96,8 +96,8 @@ where
                 log::info!("xxxxxxx   PATH ACCESS FAILURE FOR ABOVE PATH  xxxxxx");
                 log::info!("xxxxxxx   PATH ACCESS FAILURE FOR ABOVE PATH  xxxxxx");
                 log::info!("xxxxxxx   PATH ACCESS FAILURE FOR ABOVE PATH  xxxxxx");
-                // let res = auth_data.clear_cookie(msg);
-                let res = auth_data.forbid_keep_cookie(msg);
+                let res = auth_data.clear_cookie(msg);
+                // let res = auth_data.forbid_keep_cookie(msg);
                 let res = res.map_into_right_body();
                 return Ok(ServiceResponse::new(request, res))
             } else {

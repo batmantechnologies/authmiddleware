@@ -4,6 +4,7 @@ use crate::apicalls;
 use serde::{Serialize, Deserialize};
 use reqwest::{self, Client};
 use std::sync::Arc;
+use tokio::time;
 
 use actix_web::{
     HttpResponse, cookie::Cookie
@@ -86,24 +87,45 @@ impl AuthData {
         return response
     }
 
-    // Checks if the path has access to the requested url
+    // Checks if the path has access to the requested url with timeout
     pub async fn authenticate(&self, path: String, cookie_string: String) -> Result<AuthInfo, String> {
-
-        let res = self.http_client.clone().post(self.token_url.clone()+"/token/verify-token/")
-            .json(&json!({
-                "path": path,
-                "token_code": cookie_string
-            }))
-            .send()
-            .await.unwrap();
-
-        match res.status().as_u16() {
-            200 => {
-                let auth_info = res.json::<AuthInfo>().await.unwrap();
-                Ok(auth_info)
+        let url = format!("{}/token/verify-token/", self.token_url);
+        
+        // Create a timeout for the request
+        let timeout_duration = time::Duration::from_secs(3);
+        
+        match time::timeout(timeout_duration, async {
+            self.http_client.post(&url)
+                .json(&json!({
+                    "path": path,
+                    "token_code": cookie_string
+                }))
+                .send()
+                .await
+        }).await {
+            Ok(Ok(res)) => {
+                match res.status().as_u16() {
+                    200 => {
+                        res.json::<AuthInfo>().await.map_err(|err| {
+                            log::error!("Failed to parse auth response: {}", err);
+                            "Internal server error".to_string()
+                        })
+                    },
+                    _ => {
+                        let error = res.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+                        log::error!("Token verification failed: {}", error);
+                        Err(error)
+                    }
+                }
             },
-            _   => Err(res.json::<String>().await.unwrap())
+            Ok(Err(err)) => {
+                log::error!("Request to token service failed: {}", err);
+                Err("Failed to connect to authentication service".to_string())
+            },
+            Err(_) => {
+                log::error!("Token verification request timed out");
+                Err("Authentication service timeout".to_string())
+            }
         }
-
     }
 }
